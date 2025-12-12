@@ -278,8 +278,6 @@ if ! [ -f "${gcc_tarball}" ]; then
 	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/obggcc/patches/0009-Fix-missing-stdint.h-include-when-compiling-host-tools-on-OpenBSD.patch"
 	
 	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/pino/patches/0001-Disable-SONAME-versioning-for-all-target-libraries.patch"
-	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/pino/patches/0001-Change-GCC-s-C-standard-library-name-to-libestdc.patch"
-	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/pino/patches/0001-Rename-GCC-s-libgcc-library-to-libegcc.patch"
 fi
 
 # Follow Debian's approach to remove hardcoded RPATHs from binaries
@@ -553,9 +551,7 @@ for triplet in "${targets[@]}"; do
 		--enable-cet='auto' \
 		--enable-checking='release' \
 		--enable-clocale='generic' \
-		--enable-default-pie \
-		--enable-default-ssp \
-		--enable-languages='c,c++' \
+		--enable-languages='c,c++,fortran,objc,obj-c++' \
 		--enable-libstdcxx-backtrace \
 		--enable-libstdcxx-filesystem-ts \
 		--enable-libstdcxx-static-eh-pool \
@@ -572,7 +568,6 @@ for triplet in "${targets[@]}"; do
 		--enable-cxx-flags='-D_GLIBCXX_HAVE_FABSF -D_GLIBCXX_HAVE_FABSL -D_GLIBCXX_HAVE_FLOORF -D_GLIBCXX_HAVE_CEILF -D_GLIBCXX_HAVE_HYPOTF -D_GLIBCXX_HAVE_HYPOTL -D_GLIBCXX_HAVE_FLOORL -D_GLIBCXX_HAVE_CEILL' \
 		--enable-host-pie \
 		--enable-host-shared \
-		--enable-initfini-array \
 		--enable-libgomp \
 		--enable-fixincludes \
 		--enable-tls \
@@ -602,7 +597,7 @@ for triplet in "${targets[@]}"; do
 	env ${args} make \
 		CFLAGS_FOR_TARGET="${ccflags} ${linkflags} -Xlinker --allow-multiple-definition" \
 		CXXFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
-		LDFLAGS_FOR_TARGET="${linkflags}  -Xlinker -rpath-link -Xlinker ${toolchain_directory}/${triplet}/lib" \
+		LDFLAGS_FOR_TARGET="${linkflags}" \
 		gcc_cv_objdump="${CROSS_COMPILE_TRIPLET}-objdump" \
 		all --jobs="${max_jobs}"
 	make install
@@ -619,12 +614,10 @@ for triplet in "${targets[@]}"; do
 	
 	[ -f './libiberty.a' ] && unlink './libiberty.a'
 	
-	# unlink './libgcc_s.so' && echo 'GROUP ( libgcc_s.so.1 -lgcc )' > './libgcc_s.so'
-	
 	cd "${toolchain_directory}/lib/bfd-plugins"
 	
 	if ! [ -f './liblto_plugin.so' ]; then
-		true # ln --symbolic "../../libexec/gcc/${triplet}/"*'/liblto_plugin.so' './'
+		ln --symbolic "../../libexec/gcc/${triplet}/"*'/liblto_plugin.so' './'
 	fi
 done
 

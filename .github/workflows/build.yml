@@ -17,7 +17,7 @@ jobs:
       id: check-cache
       uses: actions/cache@main
       with:
-        key: gcc-15.2.0-1
+        key: gcc-15.2.0-2
         lookup-only: true
         path: |
           /tmp/x86_64-linux-gnu.tar.xz
@@ -54,7 +54,7 @@ jobs:
       if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
       uses: actions/cache@main
       with:
-        key: gcc-15.2.0-1
+        key: gcc-15.2.0-2
         path: |
           /tmp/x86_64-linux-gnu.tar.xz
           /tmp/x86_64-linux-gnu.tar.xz.sha256
@@ -93,6 +93,7 @@ jobs:
           # NetBSD
           'i386-unknown-netbsdelf',
           'x86_64-unknown-netbsd',
+          'aarch64-unknown-netbsd',
           
           # OpenBSD
           'x86_64-unknown-openbsd',
@@ -136,7 +137,7 @@ jobs:
     - name: Restore from cache
       uses: actions/cache@main
       with:
-        key: gcc-15.2.0-1
+        key: gcc-15.2.0-2
         fail-on-cache-miss: true
         path: |
           /tmp/x86_64-linux-gnu.tar.xz
@@ -234,17 +235,17 @@ jobs:
             
             source "${SIL_HOME}/usr/local/share/sil/autotools/${{ matrix.target }}.sh"
         elif [[ '${{ matrix.target }}' == *'-serenity' ]]; then
-            # declare -r SENNA_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/MingW/releases/latest')")"
-            # declare -r SENNA_TARBALL='/tmp/toolchain.tar.xz'
-            # declare -r SENNA_URL="https://github.com/AmanoTeam/MingW/releases/download/${SENNA_TAG}/x86_64-unknown-linux-gnu.tar.xz"
+            declare -r SENNA_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Senna/releases/latest')")"
+            declare -r SENNA_TARBALL='/tmp/toolchain.tar.xz'
+            declare -r SENNA_URL="https://github.com/AmanoTeam/Senna/releases/download/${SENNA_TAG}/x86_64-unknown-linux-gnu.tar.xz"
             
-            # curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --mingw-w64ent --location --url "${SENNA_URL}" --output "${SENNA_TARBALL}"
-            # tar --directory="$(dirname "${SENNA_TARBALL}")" --extract --file="${SENNA_TARBALL}"
+            curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --location --url "${SENNA_URL}" --output "${SENNA_TARBALL}"
+            tar --directory="$(dirname "${SENNA_TARBALL}")" --extract --file="${SENNA_TARBALL}"
             
-            # export SENNA_HOME='/tmp/mingw-w64'
+            export SENNA_HOME='/tmp/senna'
             export PATH="${SENNA_HOME}/bin:${PATH}"
             
-            source "${SENNA_HOME}/usr/local/share/mingw-w64/autotools/${{ matrix.target }}.sh"
+            source "${SENNA_HOME}/usr/local/share/senna/autotools/${{ matrix.target }}.sh"
         elif [[ '${{ matrix.target }}' == *'-android'* ]]; then
             declare -r PINO_TAG="$(jq --raw-output '.tag_name' <<< "$(curl --connect-timeout '10' --retry '15' --retry-all-errors --fail --silent --url 'https://api.github.com/repos/AmanoTeam/Pino/releases/latest')")"
             declare -r PINO_TARBALL='/tmp/toolchain.tar.xz'
@@ -257,12 +258,6 @@ jobs:
             export PATH="${PINO_HOME}/bin:${PATH}"
             
             source "${PINO_HOME}/usr/local/share/pino/autotools/${{ matrix.target }}.sh"
-            
-            rm \
-                "${PINO_HOME}/include/bionic/"{zconf,zlib}'.h' \
-                "${PINO_HOME}/"*'-unknown-linux-'{androideabi,android}'/include/'{zconf,zlib}'.h' \
-                "${PINO_HOME}/"*'-unknown-linux-android'*'/lib/libz.so' \
-                "${PINO_HOME}/"*'-unknown-linux-android'*'/lib/static/libz.so'
         elif [[ '${{ matrix.target }}' == *'-darwin' ]]; then
             curl \
                 --silent \
@@ -309,3 +304,23 @@ jobs:
         path: |
           /tmp/${{ matrix.target }}.tar.xz
           /tmp/${{ matrix.target }}.tar.xz.sha256
+
+  release:
+    needs: cross-build
+    runs-on: ubuntu-latest
+    name: Create release
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@main
+      - name: Create release
+        uses: softprops/action-gh-release@master
+        with:
+          tag_name: gcc-15
+          name: GCC 15.2.0
+          files: ./*/*-unknown-*.tar.xz*
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+          body: "* Update to GCC 15.2.0"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
