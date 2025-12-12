@@ -492,6 +492,7 @@ for triplet in "${targets[@]}"; do
 		--with-zstd="${toolchain_directory}" \
 		--with-system-zlib \
 		--without-static-standard-libraries \
+		--with-pic \
 		CFLAGS="-I${toolchain_directory}/include ${ccflags}" \
 		CXXFLAGS="-I${toolchain_directory}/include ${ccflags}" \
 		LDFLAGS="-L${toolchain_directory}/lib ${linkflags}"
@@ -580,11 +581,12 @@ for triplet in "${targets[@]}"; do
 		--disable-werror \
 		--disable-bootstrap \
 		--disable-multilib \
+		--without-linker-hash-style \
 		--without-headers \
 		--without-static-standard-libraries \
 		${extra_configure_flags} \
-		CFLAGS="${ccflags}" \
-		CXXFLAGS="${ccflags}" \
+		CFLAGS="-fPIC ${ccflags}" \
+		CXXFLAGS="-fPIC ${ccflags}" \
 		LDFLAGS="-L${toolchain_directory}/lib ${linkflags}"
 	
 	declare args=''
