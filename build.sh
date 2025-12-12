@@ -572,10 +572,10 @@ for triplet in "${targets[@]}"; do
 		--enable-host-shared \
 		--enable-initfini-array \
 		--enable-libgomp \
+		--enable-fixincludes \
 		--with-specs="${specs}" \
 		--with-pic \
 		--disable-libsanitizer \
-		--disable-fixincludes \
 		--disable-libstdcxx-pch \
 		--disable-werror \
 		--disable-bootstrap \
@@ -598,7 +598,7 @@ for triplet in "${targets[@]}"; do
 		CXXFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
 		LDFLAGS_FOR_TARGET="${linkflags}  -Xlinker -rpath-link -Xlinker ${toolchain_directory}/${triplet}/lib" \
 		gcc_cv_objdump="${CROSS_COMPILE_TRIPLET}-objdump" \
-		all --jobs=1 #"${max_jobs}"
+		all --jobs="${max_jobs}"
 	make install
 	
 	rm "${toolchain_directory}/bin/${triplet}-${triplet}-"* || true
