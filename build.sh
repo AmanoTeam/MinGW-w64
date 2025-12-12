@@ -564,7 +564,7 @@ for triplet in "${targets[@]}"; do
 		--enable-threads='win32' \
 		--enable-libstdcxx-threads \
 		--enable-libssp \
-		--enable-cxx-flags="${linkflags}" \
+		--enable-cxx-flags="-D_GLIBCXX_HAVE_FABSF -D_GLIBCXX_HAVE_FABSL -D_GLIBCXX_HAVE_FLOORF -D_GLIBCXX_HAVE_CEILF -D_GLIBCXX_HAVE_HYPOTF -D_GLIBCXX_HAVE_HYPOTL -D_GLIBCXX_HAVE_FLOORL -D_GLIBCXX_HAVE_CEILL ${linkflags}" \
 		--enable-host-pie \
 		--enable-host-shared \
 		--enable-initfini-array \
