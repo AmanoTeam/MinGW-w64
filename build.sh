@@ -3,7 +3,7 @@
 set -eu
 
 declare -r toolchain_directory='/tmp/mingw-w64'
-declare -r share_directory="${toolchain_directory}/usr/local/share/senna"
+declare -r share_directory="${toolchain_directory}/usr/local/share/mingw"
 
 declare -r environment="LD_LIBRARY_PATH=${toolchain_directory}/lib PATH=${PATH}:${toolchain_directory}/bin"
 
@@ -35,6 +35,12 @@ declare -r zlib_directory='/tmp/zlib-develop'
 declare -r zstd_tarball='/tmp/zstd.tar.gz'
 declare -r zstd_directory='/tmp/zstd-dev'
 
+declare -r yasm_tarball='/tmp/yasm.tar.gz'
+declare -r yasm_directory='/tmp/yasm-1.3.0'
+
+declare -r ninja_tarball='/tmp/ninja.tar.gz'
+declare -r ninja_directory='/tmp/ninja-1.12.1'
+
 declare -r gcc_major='15'
 
 declare -r max_jobs='30'
@@ -65,6 +71,8 @@ export \
 	pkg_cv_ZSTD_LIBS \
 	ZSTD_CFLAGS \
 	ZSTD_LIBS
+
+export ac_cv_header_stdc='yes'
 
 declare build_type="${1}"
 
@@ -238,6 +246,43 @@ if ! [ -f "${zstd_tarball}" ]; then
 		--directory="$(dirname "${zstd_directory}")" \
 		--extract \
 		--file="${zstd_tarball}"
+fi
+
+if ! [ -f "${yasm_tarball}" ]; then
+	curl \
+		--url 'https://deb.debian.org/debian/pool/main/y/yasm/yasm_1.3.0.orig.tar.gz' \
+		--retry '30' \
+		--retry-delay '0' \
+		--retry-all-errors \
+		--retry-max-time '0' \
+		--location \
+		--silent \
+		--output "${yasm_tarball}"
+	
+	tar \
+		--directory="$(dirname "${yasm_directory}")" \
+		--extract \
+		--file="${yasm_tarball}"
+	
+	cd "${yasm_directory}"
+	autoreconf --force --install
+fi
+
+if ! [ -f "${ninja_tarball}" ]; then
+	curl \
+		--url 'https://deb.debian.org/debian/pool/main/n/ninja-build/ninja-build_1.12.1.orig.tar.gz' \
+		--retry '30' \
+		--retry-delay '0' \
+		--retry-all-errors \
+		--retry-max-time '0' \
+		--location \
+		--silent \
+		--output "${ninja_tarball}"
+	
+	tar \
+		--directory="$(dirname "${ninja_directory}")" \
+		--extract \
+		--file="${ninja_tarball}"
 fi
 
 if ! [ -f "${gcc_tarball}" ]; then
@@ -420,6 +465,22 @@ make install
 
 unlink "${toolchain_directory}/lib/libz.a"
 
+[ -d "${yasm_directory}/build" ] || mkdir "${yasm_directory}/build"
+
+cd "${yasm_directory}/build"
+
+../configure \
+	--host="${CROSS_COMPILE_TRIPLET}" \
+	--prefix="${toolchain_directory}" \
+	--enable-shared \
+	--disable-static \
+	CFLAGS="${ccflags}" \
+	CXXFLAGS="${ccflags}" \
+	LDFLAGS="${linkflags}"
+
+make all --jobs
+make install
+
 [ -d "${zstd_directory}/.build" ] || mkdir "${zstd_directory}/.build"
 
 cd "${zstd_directory}/.build"
@@ -445,6 +506,25 @@ cmake \
 
 cmake --build "${PWD}"
 cmake --install "${PWD}" --strip
+
+[ -d "${ninja_directory}/build" ] || mkdir "${ninja_directory}/build"
+
+cd "${ninja_directory}/build"
+rm --force --recursive ./*
+
+if [[ "${CROSS_COMPILE_TRIPLET}" != *'-android'* ]]; then
+	cmake \
+		-S "${ninja_directory}" \
+		-B "${PWD}" \
+		${cmake_flags} \
+		-DBUILD_TESTING='OFF' \
+		-DCMAKE_POLICY_VERSION_MINIMUM='3.5' \
+		-DCMAKE_INSTALL_PREFIX="${toolchain_directory}" \
+		-DCMAKE_INSTALL_RPATH='$ORIGIN/../lib'
+	
+	cmake --build "${PWD}"
+	cmake --install "${PWD}" --strip
+fi
 
 # We prefer symbolic links over hard links.
 cp "${workdir}/submodules/obggcc/tools/ln.sh" '/tmp/ln'
@@ -630,7 +710,12 @@ for triplet in "${targets[@]}"; do
 done
 
 # Delete libtool files and other unnecessary files GCC installs
-rm --force --recursive "${toolchain_directory}/share"
+rm \
+	--force \
+	--recursive \
+	"${toolchain_directory}/share" \
+	"${toolchain_directory}/lib/lib"*'.a' \
+	"${toolchain_directory}/include"
 
 find \
 	"${toolchain_directory}" \
