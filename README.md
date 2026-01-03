@@ -2,7 +2,7 @@
 
 The official download page at <https://www.mingw-w64.org/downloads> lists several sources for prebuilt MinGW-w64 binaries for Linux. However, most of them are either outdated or tied to specific Linux distributions, making them non-portable.
 
-After spending too much time searching for a toolchain that met my needs, I decided to build it myself. While I was at it, I also produced builds for **BSD**, **Haiku**, and **Android**.
+After spending too much time searching for a toolchain that met my needs, I decided to build it myself. While I was at it, I also produced builds for **macOS**, **BSD**, **Haiku**, and **Android**.
 
 ## Releases
 
