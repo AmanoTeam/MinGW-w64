@@ -8,6 +8,7 @@ unset \
 	CC \
 	CXX \
 	RC \
+	WINDRES \
 	AR \
 	AS \
 	LD \
