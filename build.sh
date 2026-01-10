@@ -11,6 +11,8 @@ declare -r workdir="${PWD}"
 
 declare -r revision="$(git rev-parse --short HEAD)"
 
+declare -r gcc_major='15'
+
 declare -r gmp_tarball='/tmp/gmp.tar.xz'
 declare -r gmp_directory='/tmp/gmp-6.3.0'
 
@@ -27,7 +29,7 @@ declare -r binutils_tarball='/tmp/binutils.tar.xz'
 declare -r binutils_directory='/tmp/binutils'
 
 declare -r gcc_tarball='/tmp/gcc.tar.xz'
-declare -r gcc_directory='/tmp/gcc-releases-gcc-15'
+declare -r gcc_directory="/tmp/gcc-releases-gcc-${gcc_major}"
 
 declare -r zlib_tarball='/tmp/zlib.tar.gz'
 declare -r zlib_directory='/tmp/zlib-develop'
@@ -40,8 +42,6 @@ declare -r yasm_directory='/tmp/yasm-1.3.0'
 
 declare -r ninja_tarball='/tmp/ninja.tar.gz'
 declare -r ninja_directory='/tmp/ninja-1.12.1'
-
-declare -r gcc_major='15'
 
 declare -r max_jobs='30'
 
@@ -652,11 +652,11 @@ for triplet in "${targets[@]}"; do
 		--enable-host-shared \
 		--enable-libgomp \
 		--enable-fixincludes \
-		--enable-tls \
 		--with-specs="${specs}" \
 		--with-pic \
 		--with-gnu-as \
 		--with-gnu-ld \
+		--disable-tls \
 		--disable-libstdcxx-verbose \
 		--disable-symvers \
 		--disable-gnu-unique-object \
