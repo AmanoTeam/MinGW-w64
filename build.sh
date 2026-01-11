@@ -666,6 +666,7 @@ for triplet in "${targets[@]}"; do
 		--disable-werror \
 		--disable-bootstrap \
 		--disable-multilib \
+		--disable-win32-utf8-manifest \
 		--without-headers \
 		--without-static-standard-libraries \
 		${extra_configure_flags} \
