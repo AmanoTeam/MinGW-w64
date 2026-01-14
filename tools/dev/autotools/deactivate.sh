@@ -9,6 +9,7 @@ unset \
 	CXX \
 	RC \
 	WINDRES \
+	DLLTOOL \
 	AR \
 	AS \
 	LD \
@@ -16,6 +17,7 @@ unset \
 	RANLIB \
 	STRIP \
 	OBJCOPY \
+	OBJDUMP \
 	READELF \
 	PKG_CONFIG \
 	CMAKE_TOOLCHAIN_FILE \
