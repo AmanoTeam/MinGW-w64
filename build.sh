@@ -100,7 +100,7 @@ declare -r \
 
 if ! [ -f "${gmp_tarball}" ]; then
 	curl \
-		--url 'https://mirrors.kernel.org/gnu/gmp/gmp-6.3.0.tar.xz' \
+		--url 'https://gnu.mirror.constant.com/gmp/gmp-6.3.0.tar.xz' \
 		--retry '30' \
 		--retry-all-errors \
 		--retry-delay '0' \
@@ -119,7 +119,7 @@ fi
 
 if ! [ -f "${mpfr_tarball}" ]; then
 	curl \
-		--url 'https://mirrors.kernel.org/gnu/mpfr/mpfr-4.2.2.tar.xz' \
+		--url 'https://gnu.mirror.constant.com/mpfr/mpfr-4.2.2.tar.xz' \
 		--retry '30' \
 		--retry-all-errors \
 		--retry-delay '0' \
@@ -138,7 +138,7 @@ fi
 
 if ! [ -f "${mpc_tarball}" ]; then
 	curl \
-		--url 'https://mirrors.kernel.org/gnu/mpc/mpc-1.3.1.tar.gz' \
+		--url 'https://gnu.mirror.constant.com/mpc/mpc-1.3.1.tar.gz' \
 		--retry '30' \
 		--retry-all-errors \
 		--retry-delay '0' \
@@ -287,7 +287,7 @@ fi
 
 if ! [ -f "${gcc_tarball}" ]; then
 	curl \
-		--url 'https://github.com/gcc-mirror/gcc/archive/refs/heads/releases/gcc-15.tar.gz' \
+		--url "https://github.com/gcc-mirror/gcc/archive/refs/heads/releases/gcc-${gcc_major}.tar.gz" \
 		--retry '30' \
 		--retry-all-errors \
 		--retry-delay '0' \
@@ -322,8 +322,6 @@ if ! [ -f "${gcc_tarball}" ]; then
 	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/obggcc/patches/0005-Turn-Wint-conversion-back-into-an-warning.patch"
 	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/obggcc/patches/gcc-15/0006-Turn-Wincompatible-pointer-types-back-into-an-warning.patch"
 	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/obggcc/patches/0007-Add-relative-RPATHs-to-GCC-host-tools.patch"
-	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/obggcc/patches/0008-Add-ARM-and-ARM64-drivers-to-OpenBSD-host-tools.patch"
-	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/obggcc/patches/0009-Fix-missing-stdint.h-include-when-compiling-host-tools-on-OpenBSD.patch"
 	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/obggcc/patches/0001-Prevent-libstdc-from-trying-to-implement-math-stubs.patch"
 	
 	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/pino/patches/0001-Disable-SONAME-versioning-for-all-target-libraries.patch"
@@ -349,15 +347,6 @@ sed \
 	"${mpc_directory}/configure" \
 	"${mpfr_directory}/configure" \
 	"${gmp_directory}/configure"
-
-# Fix Autotools mistakenly detecting shared libraries as not supported on OpenBSD
-while read file; do
-	sed \
-		--in-place \
-		--regexp-extended \
-		's|test -f /usr/libexec/ld.so|true|g' \
-		"${file}"
-done <<< "$(find '/tmp' -type 'f' -name 'configure')"
 
 # Force GCC and binutils to prefix host tools with the target triplet even in native builds
 sed \
@@ -486,16 +475,9 @@ make install
 cd "${zstd_directory}/.build"
 rm --force --recursive ./*
 
-declare cmake_flags=''
-
-if [[ "${CROSS_COMPILE_TRIPLET}" = *'-darwin'* ]]; then
-	cmake_flags+=' -DCMAKE_SYSTEM_NAME=Darwin'
-fi
-
 cmake \
 	-S "${zstd_directory}/build/cmake" \
 	-B "${PWD}" \
-	${cmake_flags} \
 	-DCMAKE_C_FLAGS="-DZDICT_QSORT=ZDICT_QSORT_MIN ${ccflags}" \
 	-DCMAKE_INSTALL_PREFIX="${toolchain_directory}" \
 	-DBUILD_SHARED_LIBS=ON \
@@ -516,7 +498,6 @@ if [[ "${CROSS_COMPILE_TRIPLET}" != *'-android'* ]]; then
 	cmake \
 		-S "${ninja_directory}" \
 		-B "${PWD}" \
-		${cmake_flags} \
 		-DBUILD_TESTING='OFF' \
 		-DCMAKE_POLICY_VERSION_MINIMUM='3.5' \
 		-DCMAKE_INSTALL_PREFIX="${toolchain_directory}" \
@@ -657,17 +638,16 @@ for triplet in "${targets[@]}"; do
 		--with-gnu-as \
 		--with-gnu-ld \
 		--disable-tls \
+		--disable-canonical-system-headers \
 		--disable-libstdcxx-verbose \
 		--disable-symvers \
 		--disable-gnu-unique-object \
 		--disable-gnu-indirect-function \
 		--disable-libsanitizer \
 		--disable-libstdcxx-pch \
-		--disable-werror \
 		--disable-bootstrap \
 		--disable-multilib \
 		--disable-win32-utf8-manifest \
-		--without-headers \
 		--without-static-standard-libraries \
 		${extra_configure_flags} \
 		CFLAGS="-fPIC ${ccflags}" \
@@ -703,11 +683,12 @@ for triplet in "${targets[@]}"; do
 	
 	[ -f './libiberty.a' ] && unlink './libiberty.a'
 	
-	cd "${toolchain_directory}/lib/bfd-plugins"
-	
-	if ! [ -f './liblto_plugin.so' ]; then
-		ln --symbolic "../../libexec/gcc/${triplet}/"*'/liblto_plugin.so' './'
-	fi
+	ln \
+		--symbolic \
+		--relative \
+		--force \
+		"${toolchain_directory}/libexec/gcc/${triplet}/${gcc_major}/liblto_plugin.so" \
+		"${toolchain_directory}/lib/bfd-plugins"
 done
 
 # Delete libtool files and other unnecessary files GCC installs
@@ -716,7 +697,9 @@ rm \
 	--recursive \
 	"${toolchain_directory}/share" \
 	"${toolchain_directory}/lib/lib"*'.a' \
-	"${toolchain_directory}/include"
+	"${toolchain_directory}/include" \
+	"${toolchain_directory}/lib/pkgconfig" \
+	"${toolchain_directory}/lib/cmake"
 
 find \
 	"${toolchain_directory}" \
