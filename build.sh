@@ -583,10 +583,9 @@ for triplet in "${targets[@]}"; do
 		--output "${sysroot_file}"
 	
 	tar \
+		--directory="${toolchain_directory}" \
 		--extract \
 		--file="${sysroot_file}"
-	
-	cp --recursive "${sysroot_directory}" "${toolchain_directory}"
 	
 	rm --force --recursive ./*
 	
@@ -661,7 +660,7 @@ for triplet in "${targets[@]}"; do
 	fi
 	
 	env ${args} make \
-		CFLAGS_FOR_TARGET="${ccflags} ${linkflags} -Xlinker --allow-multiple-definition" \
+		CFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
 		CXXFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
 		LDFLAGS_FOR_TARGET="${linkflags}" \
 		gcc_cv_objdump="${CROSS_COMPILE_TRIPLET}-objdump" \
