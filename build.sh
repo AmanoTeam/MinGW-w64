@@ -625,7 +625,7 @@ for triplet in "${targets[@]}"; do
 		--with-zstd="${toolchain_directory}" \
 		--with-system-zlib \
 		--with-gcc-major-version-only \
-		--with-sysroot="${toolchain_directory}/${target}" \
+		--with-sysroot="${toolchain_directory}/${triplet}" \
 		--with-native-system-header-dir='/include' \
 		--with-default-libstdcxx-abi='new' \
 		--includedir="${toolchain_directory}/${triplet}/include" \
@@ -677,8 +677,8 @@ for triplet in "${targets[@]}"; do
 	fi
 	
 	env ${args} make \
-		CFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
-		CXXFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
+		CFLAGS_FOR_TARGET="-isystem ${toolchain_directory}/${triplet}/include ${ccflags} ${linkflags}" \
+		CXXFLAGS_FOR_TARGET="-isystem ${toolchain_directory}/${triplet}/include ${ccflags} ${linkflags}" \
 		LDFLAGS_FOR_TARGET="${linkflags}" \
 		gcc_cv_objdump="${CROSS_COMPILE_TRIPLET}-objdump" \
 		all --jobs="${max_jobs}"
