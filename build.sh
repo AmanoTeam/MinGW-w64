@@ -50,8 +50,10 @@ declare -r linkflags='-Xlinker -s'
 
 declare -ra targets=(
 	# 'aarch64-w64-mingw32'
-	'x86_64-w64-mingw32'
-	'i686-w64-mingw32'
+	'x86_64-w64-mingw32-ucrt'
+	'x86_64-w64-mingw32-msvcrt'
+	'i686-w64-mingw32-ucrt'
+	'i686-w64-mingw32-msvcrt'
 )
 
 declare -r PKG_CONFIG_PATH="${toolchain_directory}/lib/pkgconfig"
@@ -543,6 +545,7 @@ for triplet in "${targets[@]}"; do
 	declare extra_configure_flags=''
 	
 	declare specs='%{!Qy: -Qn}'
+	declare target="${triplet/-msvcrt/}"
 	
 	if ! (( is_native )); then
 		extra_configure_flags+=" --with-cross-host=${CROSS_COMPILE_TRIPLET}"
@@ -560,7 +563,7 @@ for triplet in "${targets[@]}"; do
 	
 	../configure \
 		--host="${CROSS_COMPILE_TRIPLET}" \
-		--target="${triplet}" \
+		--target="${target}" \
 		--prefix="${toolchain_directory}" \
 		--disable-gold \
 		--enable-ld \
@@ -611,7 +614,7 @@ for triplet in "${targets[@]}"; do
 	
 	../configure \
 		--host="${CROSS_COMPILE_TRIPLET}" \
-		--target="${triplet}" \
+		--target="${target}" \
 		--prefix="${toolchain_directory}" \
 		--with-gmp="${toolchain_directory}" \
 		--with-mpc="${toolchain_directory}" \
@@ -646,19 +649,17 @@ for triplet in "${targets[@]}"; do
 		--enable-host-shared \
 		--enable-libgomp \
 		--enable-fixincludes \
+		--enable-libstdcxx-verbose \
 		--with-specs="${specs}" \
 		--with-pic \
 		--with-gnu-as \
 		--with-gnu-ld \
 		--disable-tls \
 		--disable-canonical-system-headers \
-		--disable-libstdcxx-verbose \
 		--disable-symvers \
 		--disable-gnu-unique-object \
 		--disable-gnu-indirect-function \
 		--disable-libsanitizer \
-		--disable-libstdcxx-pch \
-		--disable-bootstrap \
 		--disable-multilib \
 		--disable-win32-utf8-manifest \
 		--without-static-standard-libraries \
