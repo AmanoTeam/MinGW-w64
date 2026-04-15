@@ -686,15 +686,15 @@ for triplet in "${targets[@]}"; do
 	fi
 	
 	env ${args} make \
-		CFLAGS_FOR_TARGET="-isystem ${toolchain_directory}/${triplet}/include ${ccflags} ${linkflags}" \
-		CXXFLAGS_FOR_TARGET="-isystem ${toolchain_directory}/${triplet}/include ${ccflags} ${linkflags}" \
+		CFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
+		CXXFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
 		LDFLAGS_FOR_TARGET="${linkflags}" \
 		gcc_cv_objdump="${CROSS_COMPILE_TRIPLET}-objdump" \
 		all --jobs="${max_jobs}"
 	make install
 	
-	echo >> "${toolchain_directory}/${triplet}/include/c++/${gcc_major}/${triplet}/bits/c++config.h"
-	cat "${workdir}/patches/c++config.h" >> "${toolchain_directory}/${triplet}/include/c++/${gcc_major}/${triplet}/bits/c++config.h"
+	echo >> "${toolchain_directory}/${triplet}/include/c++/${gcc_major}/${target}/bits/c++config.h"
+	cat "${workdir}/patches/c++config.h" >> "${toolchain_directory}/${triplet}/include/c++/${gcc_major}/${target}/bits/c++config.h"
 	
 	rm "${toolchain_directory}/bin/${triplet}-${triplet}-"* || true
 	
@@ -706,7 +706,7 @@ for triplet in "${targets[@]}"; do
 		cd '../lib'
 	fi
 	
-	[ -f './libiberty.a' ] && unlink './libiberty.a'
+	rm --force './libiberty.a'
 	
 	ln \
 		--symbolic \
