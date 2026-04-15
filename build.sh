@@ -558,6 +558,8 @@ for triplet in "${targets[@]}"; do
 		extra_configure_flags+=' --enable-host-bind-now'
 	fi
 	
+	rm --force --recursive "${toolchain_directory}/${target}"
+	
 	[ -d "${binutils_directory}/build" ] || mkdir "${binutils_directory}/build"
 	
 	cd "${binutils_directory}/build"
@@ -613,7 +615,13 @@ for triplet in "${targets[@]}"; do
 	cd "${gcc_directory}/build"
 	
 	rm --force --recursive ./*
-	rm --force --recursive ${toolchain_directory}/${target}
+	
+	mv \
+		"${toolchain_directory}/${target}/bin" \
+		"${toolchain_directory}/${triplet}"
+	
+	rm --force --recursive "${toolchain_directory}/${target}"
+	
 	ln -s ${toolchain_directory}/${triplet} ${toolchain_directory}/${target}
 	../configure \
 		--host="${CROSS_COMPILE_TRIPLET}" \
