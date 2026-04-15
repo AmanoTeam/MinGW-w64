@@ -712,8 +712,12 @@ for triplet in "${targets[@]}"; do
 		--symbolic \
 		--relative \
 		--force \
-		"${toolchain_directory}/libexec/gcc/${triplet}/${gcc_major}/liblto_plugin.so" \
+		"${toolchain_directory}/libexec/gcc/${target}/${gcc_major}/liblto_plugin.so" \
 		"${toolchain_directory}/lib/bfd-plugins"
+	
+	mv \
+		"${toolchain_directory}/lib/gcc/${target}/${gcc_major}/"*'.'{a,o} \
+		"${toolchain_directory}/${triplet}/lib"
 done
 
 # Delete libtool files and other unnecessary files GCC installs
