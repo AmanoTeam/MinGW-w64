@@ -613,7 +613,7 @@ for triplet in "${targets[@]}"; do
 	cd "${gcc_directory}/build"
 	
 	rm --force --recursive ./*
-	rm --force ${toolchain_directory}/${target}
+	rm --force --recursive ${toolchain_directory}/${target}
 	ln -s ${toolchain_directory}/${triplet} ${toolchain_directory}/${target}
 	../configure \
 		--host="${CROSS_COMPILE_TRIPLET}" \
