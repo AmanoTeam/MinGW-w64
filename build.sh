@@ -820,6 +820,7 @@ for triplet in "${targets[@]}"; do
 		ln \
 			--symbolic \
 			--relative \
+			--force \
 			"${toolchain_directory}/${triplet}/lib/nouzen/bin/"* \
 			"${toolchain_directory}/${triplet}/bin"
 		
