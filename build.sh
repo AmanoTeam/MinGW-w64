@@ -873,6 +873,5 @@ for triplet in "${targets[@]}"; do
 done
 
 for directory in "${toolchain_directory}/include/c++/${gcc_major}/"*'-w64-'*; do
-	patch --directory="${directory}" --strip='1' --input="${workdir}/patches/0001-Unify-bits-c-config.h-for-MSVCRT-and-UCRT.patch"
+	patch --directory="${directory}" --strip='1' --input="${workdir}/patches/0001-Unify-bits-c-config.h-for-MSVCRT-and-UCRT.patch" || true
 done
-
