@@ -53,8 +53,8 @@ declare -ra targets=(
 	# 'aarch64-w64-mingw32'
 	'x86_64-w64-mingw32-msvcrt'
 	'x86_64-w64-mingw32-ucrt'
-	# 'i686-w64-mingw32-msvcrt'
-	# 'i686-w64-mingw32-ucrt'
+	'i686-w64-mingw32-msvcrt'
+	'i686-w64-mingw32-ucrt'
 )
 
 declare -r gcc_wrapper='/tmp/gcc-wrapper'
@@ -783,15 +783,6 @@ for triplet in "${targets[@]}"; do
 	
 	rm --force --recursive "${toolchain_directory}/${target}"
 	
-	if [[ "${triplet}" = *'-msvcrt' ]]; then
-		ln \
-			--symbolic \
-			--relative \
-			--force \
-			"${toolchain_directory}/${triplet}" \
-			"${toolchain_directory}/${target}"
-	fi
-	
 	if [ "${triplet}" != 'i686-w64-mingw32-ucrt' ]; then
 		mkdir "${toolchain_directory}/${triplet}/lib/nouzen"
 		
@@ -960,3 +951,17 @@ done
 for directory in "${toolchain_directory}/include/c++/${gcc_major}/"*'-w64-'*; do
 	patch --directory="${directory}" --strip='1' --input="${workdir}/patches/0001-Unify-bits-c-config.h-for-MSVCRT-and-UCRT.patch" || true
 done
+
+ln \
+	--symbolic \
+	--relative \
+	--force \
+	"${toolchain_directory}/x86_64-w64-mingw32-msvcrt" \
+	"${toolchain_directory}/x86_64-w64-mingw32"
+
+ln \
+	--symbolic \
+	--relative \
+	--force \
+	"${toolchain_directory}/i686-w64-mingw32-msvcrt" \
+	"${toolchain_directory}/i686-w64-mingw32"
