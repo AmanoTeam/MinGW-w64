@@ -52,7 +52,7 @@ declare -r linkflags='-Xlinker -s'
 declare -ra targets=(
 	# 'aarch64-w64-mingw32'
 	'x86_64-w64-mingw32-msvcrt'
-	# 'x86_64-w64-mingw32-ucrt'
+	'x86_64-w64-mingw32-ucrt'
 	# 'i686-w64-mingw32-msvcrt'
 	# 'i686-w64-mingw32-ucrt'
 )
@@ -782,6 +782,15 @@ for triplet in "${targets[@]}"; do
 		"${toolchain_directory}/${triplet}/lib"
 	
 	rm --force --recursive "${toolchain_directory}/${target}"
+	
+	if [[ "${triplet}" = *'-msvcrt' ]]; then
+		ln \
+			--symbolic \
+			--relative \
+			--force \
+			"${toolchain_directory}/${triplet}" \
+			"${toolchain_directory}/${target}"
+	fi
 	
 	if [ "${triplet}" != 'i686-w64-mingw32-ucrt' ]; then
 		mkdir "${toolchain_directory}/${triplet}/lib/nouzen"
