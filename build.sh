@@ -547,7 +547,7 @@ declare cc='gcc'
 declare readelf='readelf'
 declare strip='strip'
 
-if ! (( native )); then
+if ! (( is_native )); then
 	cc="${CC}"
 	readelf="${READELF}"
 	strip="${STRIP}"
@@ -614,7 +614,7 @@ for triplet in "${targets[@]}"; do
 	
 	cd "$(mktemp --directory)"
 	
-	declare sysroot_url="https://github.com/AmanoTeam/mingw64-sysroot/releases/latest/download/${triplet}.tar.xz"
+	declare sysroot_url="https://github.com/AmanoTeam/MinGW-w64/releases/download/sysroot/${triplet}.tar.xz"
 	declare sysroot_file="${PWD}/${triplet}.tar.xz"
 	declare sysroot_directory="${PWD}/${triplet}"
 	
