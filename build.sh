@@ -817,8 +817,6 @@ for triplet in "${targets[@]}"; do
 			"${workdir}/tools/repositories/${triplet}/"*'.conf' \
 			"${toolchain_directory}/${triplet}/lib/nouzen/etc/nouzen/sources.list"
 		
-		mkdir "${toolchain_directory}/${triplet}/bin"
-		
 		ln \
 			--symbolic \
 			--relative \
