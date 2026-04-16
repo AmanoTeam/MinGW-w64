@@ -5,8 +5,6 @@ set -eu
 declare -r toolchain_directory='/tmp/mingw-w64'
 declare -r share_directory="${toolchain_directory}/usr/local/share/mingw"
 
-declare -r environment="LD_LIBRARY_PATH=${toolchain_directory}/lib PATH=${PATH}:${toolchain_directory}/bin"
-
 declare -r workdir="${PWD}"
 
 declare -r revision="$(git rev-parse --short HEAD)"
@@ -43,6 +41,9 @@ declare -r yasm_directory='/tmp/yasm-1.3.0'
 declare -r ninja_tarball='/tmp/ninja.tar.gz'
 declare -r ninja_directory='/tmp/ninja-1.12.1'
 
+declare -r nz_directory="${workdir}/submodules/nz"
+declare -r nz_prefix='/tmp/nz'
+
 declare -r max_jobs='30'
 
 declare -r ccflags='-w -O2'
@@ -50,10 +51,10 @@ declare -r linkflags='-Xlinker -s'
 
 declare -ra targets=(
 	# 'aarch64-w64-mingw32'
-	'x86_64-w64-mingw32-ucrt'
 	'x86_64-w64-mingw32-msvcrt'
-	'i686-w64-mingw32-msvcrt'
-	'i686-w64-mingw32-ucrt'
+	# 'x86_64-w64-mingw32-ucrt'
+	# 'i686-w64-mingw32-msvcrt'
+	# 'i686-w64-mingw32-ucrt'
 )
 
 declare -r gcc_wrapper='/tmp/gcc-wrapper'
@@ -507,6 +508,25 @@ cmake \
 cmake --build "${PWD}"
 cmake --install "${PWD}" --strip
 
+[ -d "${nz_directory}/build" ] || mkdir "${nz_directory}/build"
+
+cd "${nz_directory}/build"
+rm --force --recursive ./*
+
+cmake \
+	-S "${nz_directory}" \
+	-B "${PWD}" \
+	-DCMAKE_C_FLAGS="${ccflags}" \
+	-DCMAKE_CXX_FLAGS="${ccflags}" \
+	-DCMAKE_INSTALL_PREFIX="${nz_prefix}"
+
+cmake --build "${PWD}" -- --jobs='1'
+cmake --install "${PWD}" --strip
+
+mkdir --parent "${toolchain_directory}/lib/nouzen"
+mv "${nz_prefix}/lib/"* "${toolchain_directory}/lib/nouzen"
+rmdir "${nz_prefix}/lib"
+
 [ -d "${ninja_directory}/build" ] || mkdir "${ninja_directory}/build"
 
 cd "${ninja_directory}/build"
@@ -707,7 +727,6 @@ for triplet in "${targets[@]}"; do
 		--disable-symvers \
 		--disable-gnu-unique-object \
 		--disable-gnu-indirect-function \
-		--disable-libsanitizer \
 		--disable-multilib \
 		--disable-win32-utf8-manifest \
 		--without-static-standard-libraries \
@@ -716,13 +735,21 @@ for triplet in "${targets[@]}"; do
 		CXXFLAGS="-fPIC ${ccflags}" \
 		LDFLAGS="-L${toolchain_directory}/lib ${linkflags}"
 	
-	declare args=''
+	declare environment=''
 	
 	if (( is_native )); then
-		args+="${environment}"
+		environment+="LD_LIBRARY_PATH=${toolchain_directory}/lib PATH=${PATH}:${toolchain_directory}/bin"
 	fi
 	
-	env ${args} make \
+	if ! (( is_native )); then
+		printf "exec '%s' \"\${@}\"\n" "${triplet}-gcc" > "/tmp/${target}-gcc"
+		chmod +x "/tmp/${target}-gcc"
+		
+		printf "exec '%s' \"\${@}\"\n" "${triplet}-g++" > "/tmp/${target}-g++"
+		chmod +x "/tmp/${target}-g++"
+	fi
+	
+	env ${environment} make \
 		CFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
 		CXXFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
 		LDFLAGS_FOR_TARGET="${linkflags}" \
@@ -732,8 +759,6 @@ for triplet in "${targets[@]}"; do
 	
 	echo >> "${toolchain_directory}/${triplet}/include/c++/${gcc_major}/${target}/bits/c++config.h"
 	cat "${workdir}/patches/c++config.h" >> "${toolchain_directory}/${triplet}/include/c++/${gcc_major}/${target}/bits/c++config.h"
-	
-	rm "${toolchain_directory}/bin/${triplet}-${triplet}-"* || true
 	
 	cd "${toolchain_directory}/${triplet}/lib64" 2>/dev/null || cd "${toolchain_directory}/${triplet}/lib"
 	
@@ -757,6 +782,58 @@ for triplet in "${targets[@]}"; do
 		"${toolchain_directory}/${triplet}/lib"
 	
 	rm --force --recursive "${toolchain_directory}/${target}"
+	
+	if [ "${triplet}" != 'i686-w64-mingw32-ucrt' ]; then
+		mkdir "${toolchain_directory}/${triplet}/lib/nouzen"
+		
+		cp \
+			--recursive "${nz_prefix}/"* \
+			"${toolchain_directory}/${triplet}/lib/nouzen"
+		
+		mkdir \
+			--parent \
+			"${toolchain_directory}/${triplet}/lib/nouzen/lib"
+		
+		ln \
+			--symbolic \
+			--relative \
+			"${toolchain_directory}/lib/nouzen/lib"* \
+			"${toolchain_directory}/${triplet}/lib/nouzen/lib"
+		
+		mkdir \
+			--parent \
+			"${toolchain_directory}/${triplet}/lib/nouzen/etc/nouzen/sources.list"
+		
+		cp \
+			"${workdir}/tools/repositories/${triplet}/"*'.conf' \
+			"${toolchain_directory}/${triplet}/lib/nouzen/etc/nouzen/sources.list"
+		
+		mkdir "${toolchain_directory}/${triplet}/bin"
+		
+		ln \
+			--symbolic \
+			--relative \
+			"${toolchain_directory}/${triplet}/lib/nouzen/bin/"* \
+			"${toolchain_directory}/${triplet}/bin"
+		
+		ln \
+			--symbolic \
+			--relative \
+			"${toolchain_directory}/${triplet}/bin/nz" \
+			"${toolchain_directory}/bin/${triplet}-nz"
+		
+		ln \
+			--symbolic \
+			--relative \
+			"${toolchain_directory}/${triplet}/bin/apt" \
+			"${toolchain_directory}/bin/${triplet}-apt"
+		
+		ln \
+			--symbolic \
+			--relative \
+			"${toolchain_directory}/${triplet}/bin/apt-get" \
+			"${toolchain_directory}/bin/${triplet}-apt-get"
+	fi
 done
 
 # Delete libtool files and other unnecessary files GCC installs
