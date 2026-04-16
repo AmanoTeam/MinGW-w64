@@ -57,6 +57,7 @@ declare -ra targets=(
 )
 
 declare -r gcc_wrapper='/tmp/gcc-wrapper'
+declare -r clang_wrapper='/tmp/clang-wrapper'
 
 declare -r PKG_CONFIG_PATH="${toolchain_directory}/lib/pkgconfig"
 declare -r PKG_CONFIG_LIBDIR="${PKG_CONFIG_PATH}"
@@ -563,6 +564,17 @@ make \
 	-C "${workdir}/submodules/obggcc/tools/gcc-wrapper" \
 	PREFIX="$(dirname "${gcc_wrapper}")" \
 	FLAVOR='MINGW' \
+	CFLAGS="-D WCLANG ${ccflags}" \
+	CXXFLAGS="${ccflags}" \
+	LDFLAGS="${linkflags}"  \
+	gcc
+
+cp "${gcc_wrapper}" "${clang_wrapper}"
+
+make \
+	-C "${workdir}/submodules/obggcc/tools/gcc-wrapper" \
+	PREFIX="$(dirname "${gcc_wrapper}")" \
+	FLAVOR='MINGW' \
 	CFLAGS="${ccflags}" \
 	CXXFLAGS="${ccflags}" \
 	LDFLAGS="${linkflags}"  \
@@ -856,9 +868,11 @@ for triplet in "${targets[@]}"; do
 	
 	cp "${gcc_wrapper}" "${toolchain_directory}/bin/${triplet}-gcc"
 	cp "${gcc_wrapper}" "${toolchain_directory}/bin/${triplet}-g++"
+	cp "${clang_wrapper}" "${toolchain_directory}/bin/${triplet}-clang"
+	cp "${clang_wrapper}" "${toolchain_directory}/bin/${triplet}-clang++"
 done
 
 for directory in "${toolchain_directory}/include/c++/${gcc_major}/"*'-w64-'*; do
-	patch --directory="${gmp_directory}" --strip='1' --input="${workdir}/patches/0001-Unify-bits-c-config.h-for-MSVCRT-and-UCRT.patch"
+	patch --directory="${directory}" --strip='1' --input="${workdir}/patches/0001-Unify-bits-c-config.h-for-MSVCRT-and-UCRT.patch"
 done
 
