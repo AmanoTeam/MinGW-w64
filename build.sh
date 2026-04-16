@@ -51,10 +51,12 @@ declare -r linkflags='-Xlinker -s'
 declare -ra targets=(
 	# 'aarch64-w64-mingw32'
 	'x86_64-w64-mingw32-ucrt'
-	'x86_64-w64-mingw32-msvcrt'
-	'i686-w64-mingw32-ucrt'
-	'i686-w64-mingw32-msvcrt'
+	# 'x86_64-w64-mingw32-msvcrt'
+	# 'i686-w64-mingw32-ucrt'
+	# 'i686-w64-mingw32-msvcrt'
 )
+
+declare -r gcc_wrapper='/tmp/gcc-wrapper'
 
 declare -r PKG_CONFIG_PATH="${toolchain_directory}/lib/pkgconfig"
 declare -r PKG_CONFIG_LIBDIR="${PKG_CONFIG_PATH}"
@@ -541,6 +543,31 @@ if [[ "${CROSS_COMPILE_TRIPLET}" = *'-haiku' ]]; then
 	export ac_cv_c_bigendian='no'
 fi
 
+declare cc='gcc'
+declare readelf='readelf'
+declare strip='strip'
+
+if ! (( native )); then
+	cc="${CC}"
+	readelf="${READELF}"
+	strip="${STRIP}"
+fi
+
+sed \
+	--in-place \
+	--regexp-extended \
+	"s/(GCC_MAJOR_VERSION\[\] = )\"[0-9]+\"/\1\"${gcc_major}\"/g" \
+	"${workdir}/submodules/obggcc/tools/gcc-wrapper/gcc.c" \
+
+make \
+	-C "${workdir}/submodules/obggcc/tools/gcc-wrapper" \
+	PREFIX="$(dirname "${gcc_wrapper}")" \
+	FLAVOR='MINGW' \
+	CFLAGS="${ccflags}" \
+	CXXFLAGS="${ccflags}" \
+	LDFLAGS="${linkflags}"  \
+	gcc
+
 for triplet in "${targets[@]}"; do
 	declare extra_configure_flags=''
 	
@@ -807,3 +834,31 @@ ln \
 	--relative \
 	"${share_directory}/"* \
 	"${toolchain_directory}/build"
+
+mkdir "${toolchain_directory}/include"
+
+for triplet in "${targets[@]}"; do
+	cp \
+		--recursive \
+		"${toolchain_directory}/${triplet}/include" \
+		"${toolchain_directory}"
+	
+	rm \
+		--force \
+		--recursive \
+		"${toolchain_directory}/${triplet}/include"
+	
+	ln \
+		--symbolic \
+		--relative \
+		"${toolchain_directory}/include" \
+		"${toolchain_directory}/${triplet}"
+	
+	cp "${gcc_wrapper}" "${toolchain_directory}/bin/${triplet}-gcc"
+	cp "${gcc_wrapper}" "${toolchain_directory}/bin/${triplet}-g++"
+done
+
+for directory in "${toolchain_directory}/include/c++/${gcc_major}/"*'-w64-'*; do
+	patch --directory="${gmp_directory}" --strip='1' --input="${workdir}/patches/0001-Unify-bits-c-config.h-for-MSVCRT-and-UCRT.patch"
+done
+
