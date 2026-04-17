@@ -808,6 +808,18 @@ for triplet in "${targets[@]}"; do
 			"${workdir}/tools/repositories/${triplet}/"*'.conf' \
 			"${toolchain_directory}/${triplet}/lib/nouzen/etc/nouzen/sources.list"
 		
+		declare directory=''
+		
+		if [ "${triplet}" = 'i686-w64-mingw32-msvcrt' ]; then
+			directory='mingw32'
+		elif [ "${triplet}" = 'x86_64-w64-mingw32-msvcrt' ]; then
+			directory='mingw64'
+		elif [ "${triplet}" = 'x86_64-w64-mingw32-ucrt' ]; then
+			directory='ucrt64'
+		fi
+		
+		echo "symlink-prefix = ${directory}" > "${toolchain_directory}/${triplet}/lib/nouzen/etc/nouzen/options.conf"
+		
 		ln \
 			--symbolic \
 			--relative \
