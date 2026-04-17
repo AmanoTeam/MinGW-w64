@@ -759,7 +759,7 @@ for triplet in "${targets[@]}"; do
 	declare gcc_include_dir="${toolchain_directory}/lib/gcc/${target}/${gcc_major}/include"
 	declare clang_include_dir="${gcc_include_dir}/clang"
 	
-	mkdir "${clang_include_dir}"
+	[ -d "${clang_include_dir}" ] || mkdir "${clang_include_dir}"
 	
 	ln \
 		--symbolic \
