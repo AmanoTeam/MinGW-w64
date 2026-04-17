@@ -759,20 +759,22 @@ for triplet in "${targets[@]}"; do
 	declare gcc_include_dir="${toolchain_directory}/lib/gcc/${target}/${gcc_major}/include"
 	declare clang_include_dir="${gcc_include_dir}/clang"
 	
-	[ -d "${clang_include_dir}" ] || mkdir "${clang_include_dir}"
-	
-	ln \
-		--symbolic \
-		--relative \
-		"${gcc_include_dir}/"*'.h' \
-		"${clang_include_dir}"
-	
-	rm \
-		--force \
-		"${clang_include_dir}/"*'intrin'*'.h' \
-		"${clang_include_dir}/arm"*'.h' \
-		"${clang_include_dir}/"*'3dnow'*'.h' \
-		"${clang_include_dir}/stdatomic.h"
+	if ! [ -d "${clang_include_dir}" ]; then
+		mkdir "${clang_include_dir}"
+		
+		ln \
+			--symbolic \
+			--relative \
+			"${gcc_include_dir}/"*'.h' \
+			"${clang_include_dir}"
+		
+		rm \
+			--force \
+			"${clang_include_dir}/"*'intrin'*'.h' \
+			"${clang_include_dir}/arm"*'.h' \
+			"${clang_include_dir}/"*'3dnow'*'.h' \
+			"${clang_include_dir}/stdatomic.h"
+	fi
 	
 	rm --force './libiberty.a'
 	
