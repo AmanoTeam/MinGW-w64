@@ -750,23 +750,29 @@ for triplet in "${targets[@]}"; do
 	fi
 	
 	env ${environment} make \
-		CFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
-		CXXFLAGS_FOR_TARGET="${ccflags} ${linkflags}" \
-		LDFLAGS_FOR_TARGET="${linkflags}" \
-		gcc_cv_objdump="${CROSS_COMPILE_TRIPLET}-objdump" \
 		all --jobs="${max_jobs}"
 	make install
 	
 	echo >> "${toolchain_directory}/${triplet}/include/c++/${gcc_major}/${target}/bits/c++config.h"
 	cat "${workdir}/patches/c++config.h" >> "${toolchain_directory}/${triplet}/include/c++/${gcc_major}/${target}/bits/c++config.h"
 	
-	cd "${toolchain_directory}/${triplet}/lib64" 2>/dev/null || cd "${toolchain_directory}/${triplet}/lib"
+	declare gcc_include_dir="${toolchain_directory}/lib/gcc/${target}/${gcc_major}/include"
+	declare clang_include_dir="${gcc_include_dir}/clang"
 	
-	if [[ "$(basename "${PWD}")" = 'lib64' ]]; then
-		mv './'* '../lib' || true
-		rmdir "${PWD}"
-		cd '../lib'
-	fi
+	mkdir "${clang_include_dir}"
+	
+	ln \
+		--symbolic \
+		--relative \
+		"${gcc_include_dir}/"*'.h' \
+		"${clang_include_dir}"
+	
+	rm \
+		--force \
+		"${clang_include_dir}/"*'intrin'*'.h' \
+		"${clang_include_dir}/arm"*'.h' \
+		"${clang_include_dir}/"*'3dnow'*'.h' \
+		"${clang_include_dir}/stdatomic.h"
 	
 	rm --force './libiberty.a'
 	
