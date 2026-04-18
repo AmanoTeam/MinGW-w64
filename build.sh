@@ -57,6 +57,39 @@ declare -ra targets=(
 	'i686-w64-mingw32-ucrt'
 )
 
+declare -ra symlink_tools=(
+	'addr2line'
+	'ar'
+	'as'
+	'c++filt'
+	'cpp'
+	'dlltool'
+	'dllwrap'
+	'elfedit'
+	'dwp'
+	'gcc-ar'
+	'gcc-nm'
+	'gcc-ranlib'
+	'gcov'
+	'gcov-dump'
+	'gcov-tool'
+	'gprof'
+	'ld'
+	'ld.bfd'
+	'ld.gold'
+	'lto-dump'
+	'nm'
+	'objcopy'
+	'objdump'
+	'ranlib'
+	'readelf'
+	'size'
+	'strings'
+	'strip',
+	'windmc',
+	'windres'
+)
+
 declare -r gcc_wrapper='/tmp/gcc-wrapper'
 declare -r clang_wrapper='/tmp/clang-wrapper'
 
@@ -644,6 +677,11 @@ for triplet in "${targets[@]}"; do
 	make all --jobs="${max_jobs}"
 	make install
 	
+	for executable in "${toolchain_directory}/${target}/bin/"*; do
+		unlink "${executable}"
+		cp '/tmp/binutils-gnu-wrapper' "${executable}"
+	done
+	
 	cd "$(mktemp --directory)"
 	
 	declare sysroot_url="https://github.com/AmanoTeam/MinGW-w64/releases/download/sysroot/${triplet}.tar.xz"
@@ -679,7 +717,11 @@ for triplet in "${targets[@]}"; do
 	
 	rm --force --recursive "${toolchain_directory}/${target}"
 	
-	ln -s ${toolchain_directory}/${triplet} ${toolchain_directory}/${target}
+	ln \
+		--symbolic \
+		"${toolchain_directory}/${triplet}" \
+		"${toolchain_directory}/${target}"
+	
 	../configure \
 		--host="${CROSS_COMPILE_TRIPLET}" \
 		--target="${target}" \
@@ -853,6 +895,23 @@ for triplet in "${targets[@]}"; do
 			"${toolchain_directory}/${triplet}/bin/apt-get" \
 			"${toolchain_directory}/bin/${triplet}-apt-get"
 	fi
+	
+	for name in "${symlink_tools[@]}"; do
+		source="${toolchain_directory}/bin/${target}-${name}"
+		destination="${toolchain_directory}/bin/${triplet}-${name}"
+		
+		if ! [ -f "${source}" ]; then
+			continue
+		fi
+		
+		echo "- Symlinking '${source}' to '${destination}'"
+		
+		ln \
+			--symbolic \
+			--relative \
+			"${source}" \
+			"${destination}"
+	done
 done
 
 # Delete libtool files and other unnecessary files GCC installs
