@@ -598,7 +598,7 @@ make \
 	CFLAGS="${ccflags}" \
 	CXXFLAGS="${ccflags}" \
 	LDFLAGS="${linkflags}"  \
-	gcc
+	all
 
 for triplet in "${targets[@]}"; do
 	declare extra_configure_flags=''
@@ -985,3 +985,5 @@ ln \
 	--force \
 	"${toolchain_directory}/i686-w64-mingw32-msvcrt" \
 	"${toolchain_directory}/i686-w64-mingw32"
+
+cp '/tmp/soversion-remove' "${toolchain_directory}/bin"
