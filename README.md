@@ -9,3 +9,4 @@ After spending too much time searching for a toolchain that met my needs, I deci
 The current release is based on **GCC 15** and supports cross-compiling for the `x86` and `x86_64` targets. The toolchain includes support for the **C** and **C++** frontends.
 
 You can download the prebuilt toolchains from the [releases](https://github.com/AmanoTeam/MinGW-w64/releases) page.
+
