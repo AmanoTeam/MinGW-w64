@@ -2,11 +2,16 @@
 
 set -eu
 
+declare -r workdir="${PWD}"
+
 declare -r sysroot_directory="/tmp/${CROSS_COMPILE_TRIPLET}-${CRTDLL}"
 
 declare extra_flags=''
 
 git clone https://git.code.sf.net/p/mingw-w64/mingw-w64
+
+patch --directory='mingw-w64' --strip='1' --input="${workdir}/patches/0001-Remove-versioned-SONAME-from-winpthreads.patch"
+
 mkdir mingw-w64/build
 cd mingw-w64/build
 
