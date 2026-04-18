@@ -677,10 +677,12 @@ for triplet in "${targets[@]}"; do
 	make all --jobs="${max_jobs}"
 	make install
 	
-	for executable in "${toolchain_directory}/${target}/bin/"*; do
-		unlink "${executable}"
-		cp '/tmp/binutils-gnu-wrapper' "${executable}"
-	done
+	if ! (( is_native )); then
+		for executable in "${toolchain_directory}/${target}/bin/"*; do
+			unlink "${executable}"
+			cp '/tmp/binutils-gnu-wrapper' "${executable}"
+		done
+	fi
 	
 	cd "$(mktemp --directory)"
 	
