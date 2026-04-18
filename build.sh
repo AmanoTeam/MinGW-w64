@@ -85,8 +85,8 @@ declare -ra symlink_tools=(
 	'readelf'
 	'size'
 	'strings'
-	'strip',
-	'windmc',
+	'strip'
+	'windmc'
 	'windres'
 )
 
