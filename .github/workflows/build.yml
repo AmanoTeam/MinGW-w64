@@ -115,10 +115,6 @@ jobs:
           # DragonFly BSD
           'x86_64-unknown-dragonfly',
           
-          # Haiku
-          'i586-unknown-haiku',
-          'x86_64-unknown-haiku',
-          
           # Android
           'x86_64-unknown-linux-android',
           'i686-unknown-linux-android21',
@@ -239,7 +235,7 @@ jobs:
             sudo sed \
                 --in-place \
                 '/CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG/d' \
-                '/build-'*'/Modules/Platform/Android.cmake'
+                '/usr/local/share/cmake-'*'/Modules/Platform/Android.cmake'
         elif [[ '${{ matrix.target }}' = *'-darwin' ]]; then
             curl \
                 --silent \
