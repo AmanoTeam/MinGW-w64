@@ -25,7 +25,7 @@ jobs:
       id: check-cache
       uses: actions/cache@main
       with:
-        key: gcc-15.2.1-1
+        key: gcc-16
         lookup-only: true
         path: |
           /tmp/x86_64-linux-gnu.tar.xz
@@ -56,7 +56,7 @@ jobs:
       if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
       run: |
         declare tarball_filename='/tmp/x86_64-linux-gnu.tar.xz'
-        tar --directory='/tmp' --create --file=- 'mingw-w64' | xz --threads='0' --compress -9 > "${tarball_filename}"
+        tar --directory='/tmp' --create --file=- 'mingw-gcc-cross' | xz --threads='0' --compress -9 > "${tarball_filename}"
         sha256sum "${tarball_filename}" | sed 's|/tmp/||' > "${tarball_filename}.sha256"
     - name: Upload artifact
       if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
@@ -71,7 +71,7 @@ jobs:
       if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
       uses: actions/cache@main
       with:
-        key: gcc-15.2.1-1
+        key: gcc-16
         path: |
           /tmp/x86_64-linux-gnu.tar.xz
           /tmp/x86_64-linux-gnu.tar.xz.sha256
@@ -132,7 +132,7 @@ jobs:
     - name: Restore from cache
       uses: actions/cache@main
       with:
-        key: gcc-15.2.1-1
+        key: gcc-16
         fail-on-cache-miss: true
         path: |
           /tmp/x86_64-linux-gnu.tar.xz
@@ -140,7 +140,7 @@ jobs:
     - name: Setup toolchain
       run: |
         tar --directory='/tmp' --extract --file='/tmp/x86_64-linux-gnu.tar.xz'
-        mv '/tmp/mingw-w64' '/tmp/mingw-w64-toolchain'
+        mv '/tmp/mingw-gcc-cross' '/tmp/mingw-gcc-cross-toolchain'
     - name: Cross-compile MingW to ${{ matrix.target }}
       run: |
         source './tools/setup_toolchain.sh'
@@ -158,7 +158,7 @@ jobs:
             
             source "${RAIDEN_HOME}/build/autotools/${{ matrix.target }}.sh"
         elif [[ '${{ matrix.target }}' = *'-linux-gnu'* ]]; then
-            declare -r OBGGCC_TAG='gcc-15'
+            declare -r OBGGCC_TAG='gcc-16'
             declare -r OBGGCC_TARBALL='/tmp/toolchain.tar.xz'
             declare -r OBGGCC_URL="https://github.com/AmanoTeam/obggcc/releases/download/${OBGGCC_TAG}/x86_64-unknown-linux-gnu.tar.xz"
             
@@ -293,12 +293,12 @@ jobs:
       - name: Create release
         uses: softprops/action-gh-release@master
         with:
-          tag_name: gcc-15
-          name: GCC 15.2.1
+          tag_name: gcc-16
+          name: GCC 16
           files: ./*/*-unknown-*.tar.xz*
           draft: false
           prerelease: false
           fail_on_unmatched_files: true
-          body: "* Update to GCC 15"
+          body: "* Update to GCC 16"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

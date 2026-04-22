@@ -130,6 +130,6 @@ Below is an example of building a CMake project that uses prebuilt dependencies 
 
 ## Releases
 
-The current release is based on GCC 15 and supports cross-compiling for the `x86` and `x86_64` targets. The toolchain includes support for the C and C++ frontends.
+The current release is based on GCC 16 and supports cross-compiling for the `x86` and `x86_64` targets. The toolchain includes support for the C and C++ frontends.
 
 You can download the prebuilt toolchains from the [releases](https://github.com/AmanoTeam/mingw-gcc-cross/releases) page.
