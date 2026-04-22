@@ -1048,4 +1048,4 @@ ln \
 	"${toolchain_directory}/i686-w64-mingw32-msvcrt" \
 	"${toolchain_directory}/i686-w64-mingw32"
 
-cp '/tmp/soversion-remove' "${toolchain_directory}/bin"
+cp '/tmp/soversion-remove' "${toolchain_directory}/bin" || true
