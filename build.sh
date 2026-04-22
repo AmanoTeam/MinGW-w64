@@ -377,7 +377,7 @@ if ! [ -f "${gcc_tarball}" ]; then
 	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/obggcc/patches/0001-Prevent-libstdc-from-trying-to-implement-math-stubs.patch"
 	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/obggcc/patches/0011-Revert-configure-Always-add-pre-installed-header-directories-to-search-path.patch"
 	
-	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/pino/patches/gcc-15/0001-Disable-SONAME-versioning-for-all-target-libraries.patch"
+	patch --directory="${gcc_directory}" --strip='1' --input="${workdir}/submodules/pino/patches/0001-Disable-SONAME-versioning-for-all-target-libraries.patch"
 fi
 
 # Follow Debian's approach to remove hardcoded RPATHs from binaries
