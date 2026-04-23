@@ -56,7 +56,7 @@ jobs:
       if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
       run: |
         declare tarball_filename='/tmp/x86_64-linux-gnu.tar.xz'
-        tar --directory='/tmp' --create --file=- 'mingw-w64' | xz --threads='0' --compress -9 > "${tarball_filename}"
+        tar --directory='/tmp' --create --file=- 'mingw-gcc-cross' | xz --threads='0' --compress -9 > "${tarball_filename}"
         sha256sum "${tarball_filename}" | sed 's|/tmp/||' > "${tarball_filename}.sha256"
     - name: Upload artifact
       if: ${{ steps.check-cache.outputs.cache-hit != 'true' }}
@@ -140,7 +140,7 @@ jobs:
     - name: Setup toolchain
       run: |
         tar --directory='/tmp' --extract --file='/tmp/x86_64-linux-gnu.tar.xz'
-        mv '/tmp/mingw-gcc-cross' '/tmp/mingw-w64-toolchain'
+        mv '/tmp/mingw-gcc-cross' '/tmp/mingw-gcc-cross-toolchain'
     - name: Cross-compile MingW to ${{ matrix.target }}
       run: |
         source './tools/setup_toolchain.sh'
