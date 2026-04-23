@@ -140,7 +140,7 @@ jobs:
     - name: Setup toolchain
       run: |
         tar --directory='/tmp' --extract --file='/tmp/x86_64-linux-gnu.tar.xz'
-        mv '/tmp/mingw-w64' '/tmp/mingw-w64-toolchain'
+        mv '/tmp/mingw-gcc-cross' '/tmp/mingw-w64-toolchain'
     - name: Cross-compile MingW to ${{ matrix.target }}
       run: |
         source './tools/setup_toolchain.sh'
